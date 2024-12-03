@@ -145,14 +145,18 @@ def onRenderPanel():
 	if(d[0]):
 		v.preload_index = d[1]
 
-	# Add radio button for file selection
-	file_options = ["Temporary File", "Specified File"]
-	e = mxw_imgui.radio_button("File Option", v.file_option, file_options)
-	if e[0]:
-		v.file_option = e[1]
+	# Add radio buttons for file selection
+	mxw_imgui.text_unformatted("File Storage Option:")
+	changed = False
+	if mxw_imgui.radio_button("Temporary File", v.file_option == 0):
+		v.file_option = 0
+		changed = True
+	if mxw_imgui.radio_button("Specified File", v.file_option == 1):
+		v.file_option = 1
+		changed = True
 
 	# If specified file is chosen, show input box for file path
-	if v.file_option == 1:  # Assuming 1 is the index for "Specified File"
+	if v.file_option == 1:
 		f = mxw_imgui.input_text("File Path", v.file_path)
 		if f[0]:
 			v.file_path = f[1]
