@@ -157,7 +157,7 @@ def onRenderPanel():
 
 	# If specified file is chosen, show input box for file path
 	if v.file_option == 1:
-		f = mxw_imgui.input_text("File Path", v.file_path)
+		f = mxw_imgui.input_text("File Path", v.file_path, 256)
 		if f[0]:
 			v.file_path = f[1]
 
