@@ -16,6 +16,10 @@ class video_writer:
 	videosize = [1280,720]
 	preload_index = 1
 	load_into_preload_after_record = True
+	
+	# Add radio button option for choosing between a temporary file and a specified file
+	file_option = 0
+	file_path = ""
 instance_storage = {}
 
 # ------------------------ temp file management -------------------------------------
@@ -140,5 +144,21 @@ def onRenderPanel():
 	d = mxw_imgui.drag_int("Target preload index", v.preload_index, 10, 1, 1000)
 	if(d[0]):
 		v.preload_index = d[1]
+
+	# Add radio buttons for file selection
+	mxw_imgui.text_unformatted("File Storage Option:")
+	changed = False
+	if mxw_imgui.radio_button("Temporary File", v.file_option == 0):
+		v.file_option = 0
+		changed = True
+	if mxw_imgui.radio_button("Specified File", v.file_option == 1):
+		v.file_option = 1
+		changed = True
+
+	# If specified file is chosen, show input box for file path
+	if v.file_option == 1:
+		f = mxw_imgui.input_text("File Path", v.file_path, 256)
+		if f[0]:
+			v.file_path = f[1]
 
 	return
