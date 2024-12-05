@@ -60,20 +60,55 @@ def onLoad( serialized ):
 
 def onAction():
 	v = instance_storage[item_id]
-	v.f = tempfile.NamedTemporaryFile(prefix=temp_file_prefix, suffix='.mp4')
-	v.f.close()
+
+	# clear preload
+	if(v.load_into_preload_after_record):
+		mxw.preload(v.preload_index).set_media("null")
+
+	# set fourcc
 	fourcc = cv2.VideoWriter_fourcc('M','P','4','V')
-	v.out = cv2.VideoWriter(v.f.name, fourcc, mxw.fps, v.videosize)
-	m = mxw.media(v.capture_device)
-	if(m.isvalid()):
-		m.reference(True)
+
+	# create video writer. either delete file from previous run or new temp file
+	if v.file_option == 1:
+		# first unload but may be first run
+		if not	mxw.media(v.file_path).unload_media_full_if_not_used_by_clips():
+			mxw.print_console(f"Plugin video writer: cannot unload {v.file_path}, maybe not in use")
+			
+		# os delete file
+		if os.path.isfile(v.file_path):
+			os.remove(v.file_path)	
+		else:
+			mxw.print_console(f"Plugin video writer: cannot remove {v.file_path}, maybe still in use")
+
+		# if clear, create writer
+		if not os.path.isfile(v.file_path):
+			v.out = cv2.VideoWriter(v.file_path, fourcc, mxw.fps, v.videosize)
+
+		# reference media (will start capturing)
+		m = mxw.media(v.capture_device)
+		if(m.isvalid()):
+			m.reference(True)
+
+	else:
+		# create tempfile
+		v.f = tempfile.NamedTemporaryFile(prefix=temp_file_prefix, suffix='.mp4')
+		v.f.close()
+		v.out = cv2.VideoWriter(v.f.name, fourcc, mxw.fps, v.videosize)
+
+		# reference media (will start capturing)
+		m = mxw.media(v.capture_device)
+		if(m.isvalid()):
+			m.reference(True)
+
 	return
 
 def onPostAction():
 	v = instance_storage[item_id]
 
 	# release writer (close file)
-	v.out.release()
+	if hasattr(v, 'out'):
+		v.out.release()
+		del v.out;
 
 	# refcount capture device
 	m = mxw.media(v.capture_device)
@@ -82,11 +117,11 @@ def onPostAction():
 
 	# load into preload if requested
 	if(v.load_into_preload_after_record):
-		mxw.preload(v.preload_index).set_media(v.f.name)
-
-	# delete file attribute (signal recording stopped)
-	del v.f
-
+		if v.file_option == 1:
+			mxw.preload(v.preload_index).set_media(v.file_path)
+		else:
+			mxw.preload(v.preload_index).set_media(v.f.name)
+			del v.f
 	return
 
 def onNewFrameInPlayoutCue():
@@ -101,7 +136,7 @@ def onNewFrameInPlayoutCue():
 
 def renderBlinking():
 	v = instance_storage[item_id]
-	return hasattr(v, 'f')
+	return hasattr(v, 'out')
 
 def limit_and_round_to_multiple_of_4(num):
     num = max(320, min(num, 4096))    # Ensure the number is within the range of 320 and 4096
