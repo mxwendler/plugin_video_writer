@@ -338,14 +338,19 @@ def onRenderPanel():
 	else:
 		mxw_imgui.text_unformatted("Not recording")
 
+	# half of the default item width, for the controls below
+	half_w = mxw_imgui.calc_item_width() * 0.5
+
 	# device names
 	dev = mxw.media().get_capture_device_names()
+	mxw_imgui.set_next_item_width(half_w)
 	a = mxw_imgui.combo("Capture Device", dev.index(v.capture_device), dev)
 	if(a[0]):
 		print(str(a[1]))
 		v.capture_device = dev[a[1]]
 
 	# recording resolution
+	mxw_imgui.set_next_item_width(half_w)
 	b = mxw_imgui.drag_int2("Recording resolution", v.videosize)
 	if(b[0]):
 		v.videosize = b[1]
@@ -356,9 +361,11 @@ def onRenderPanel():
 	if(c[0]):
 		v.load_into_preload_after_record = c[1]
 
-	d = mxw_imgui.drag_int("Target preload index", v.preload_index, 10, 1, 1000)
+	# int control with +/- steppers (step 1, fast 10)
+	mxw_imgui.set_next_item_width(half_w)
+	d = mxw_imgui.input_int("Target preload index", v.preload_index, 1, 10)
 	if(d[0]):
-		v.preload_index = d[1]
+		v.preload_index = max(1, min(1000, d[1]))
 
 	# Add radio buttons for file selection
 	mxw_imgui.text_unformatted("File Storage Option:")
